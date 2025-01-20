@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@nuxt/ui": "^2.21.0",
+    "appwrite": "^16.1.0",
     "nuxt": "^3.15.2",
     "vue": "latest",
     "vue-router": "latest"
