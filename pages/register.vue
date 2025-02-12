@@ -5,26 +5,28 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 
 const state = reactive({
+  name: "",
   email: "",
   password: "",
 });
 
 const validate = (state: any): FormError[] => {
   const errors = [];
+  if (!state.name) errors.push({ path: "name", message: "Required" });
   if (!state.email) errors.push({ path: "email", message: "Required" });
   if (!state.password) errors.push({ path: "password", message: "Required" });
   return errors;
 };
 
 async function onSubmit(event: FormSubmitEvent<any>) {
-  alert("Inicio de sesión exitoso.");
-  router.push("/home");
+  alert("Registro exitoso, ahora puedes iniciar sesión.");
+  router.push("/");
 }
 </script>
 
 <template>
-  <div class="flex items-center justify-center min-h-screen">
-    <div class="w-96">
+  <div>
+    <div class="mx-64 my-64 w-96 justify-items-center align-middle">
       <NuxtRouteAnnouncer />
       <UCard>
         <UForm
@@ -33,7 +35,11 @@ async function onSubmit(event: FormSubmitEvent<any>) {
           class="space-y-4"
           @submit="onSubmit"
         >
-          <h1 class="text-2xl font-bold text-center">Login</h1>
+          <h1 class="text-2xl font-bold text-center">Registro</h1>
+          <UFormGroup label="Nombre" name="name">
+            <UInput v-model="state.name" />
+          </UFormGroup>
+
           <UFormGroup label="Email" name="email">
             <UInput v-model="state.email" />
           </UFormGroup>
@@ -42,13 +48,7 @@ async function onSubmit(event: FormSubmitEvent<any>) {
             <UInput v-model="state.password" type="password" />
           </UFormGroup>
 
-<<<<<<< HEAD
-          <UButton type="submit" class="align-center"> Submit </UButton>
-=======
-          <div class="flex justify-center">
-            <UButton type="submit" class="align-center"> Login </UButton>
-          </div>
->>>>>>> 82217080d7b819ee8ace5410a7ec988dfe39e4f9
+          <UButton type="submit" class="align-center"> Registrar </UButton>
         </UForm>
       </UCard>
     </div>
