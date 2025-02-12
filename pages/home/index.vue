@@ -297,7 +297,7 @@
       align-items: center;
       justify-content: center;
       background: #1a73e8;
-      color: white;
+      color: #1a73e8;
       border: none;
       cursor: pointer;
       transition: background-color 0.2s;
