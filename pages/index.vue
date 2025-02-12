@@ -42,13 +42,9 @@ async function onSubmit(event: FormSubmitEvent<any>) {
             <UInput v-model="state.password" type="password" />
           </UFormGroup>
 
-<<<<<<< HEAD
-          <UButton type="submit" class="align-center"> Submit </UButton>
-=======
           <div class="flex justify-center">
             <UButton type="submit" class="align-center"> Login </UButton>
           </div>
->>>>>>> 82217080d7b819ee8ace5410a7ec988dfe39e4f9
         </UForm>
       </UCard>
     </div>
