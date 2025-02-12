@@ -34,7 +34,9 @@
                       <i class="fas fa-user"></i>
                     </template>
                   </div>
-                  <div class="message-bubble" v-html="parseMarkdown(message.text)">
+                  <div class="message-content-wrapper">
+                    <div class="message-sender">{{ message.type === 'bot' ? 'Gemini' : 'You' }}</div>
+                    <div class="message-bubble">{{ message.text }}</div>
                   </div>
                 </div>
               </div>
@@ -64,46 +66,11 @@
   
   <script setup>
   import { ref } from 'vue'
-  import { marked } from 'marked'
-  import hljs from 'highlight.js'
-  import 'highlight.js/styles/github.css' // O el tema que prefieras
-
-  // Configurar marked para resaltar bloques de código
-  marked.setOptions({
-    highlight: (code, lang) => {
-      return lang
-        ? hljs.highlight(code, { language: lang }).value
-        : hljs.highlightAuto(code).value
-    }
-  })
 
   const messages = ref([
       { text: 'Hi, I\'m Gemini. How can I help you today?', type: 'bot' }
   ])
   const newMessage = ref('')
-
-  const parseMarkdown = (text) => {
-  // Primero convierte el texto en HTML con markdown
-  let html = marked.parse(text);
-
-  // Reemplazar saltos de línea dobles '\n\n' que indican un nuevo párrafo con <p></p>
-  html = html.replace(/\n\n/g, '</p><p>');
-
-  // Reemplazar saltos de línea simples '\n' dentro de un párrafo con <br />
-  html = html.replace(/\n/g, '<br />');
-
-  // Si el HTML comienza o termina con <p>, asegúrate de que se cierre correctamente
-  if (!html.startsWith('<p>')) {
-    html = `<p>${html}`;
-  }
-  if (!html.endsWith('</p>')) {
-    html = `${html}</p>`;
-  }
-
-  return html;
-};
-
-
 
   const sendMessage = async () => {
       if (newMessage.value.trim()) {
@@ -121,56 +88,25 @@
           })
           const reader = response.body.getReader()
           const decoder = new TextDecoder()
-          let buffer = ''
           let accumulatedText = ''
-          let lastCharWasNewline = false
 
           while (true) {
-                const { done, value } = await reader.read()
-                if (done) {
-                    // Asegúrate de agregar el texto final
-                    if (buffer) {
-                    accumulatedText += buffer
-                    messages.value[botMessageIndex].text = accumulatedText
-                    }
-                    break
-                }
+              const { done, value } = await reader.read()
+              if (done) break
 
-                const chunk = decoder.decode(value)
-                const lines = chunk.split('\n')
+              let chunk = decoder.decode(value)
+              chunk = chunk.replace(/(^|\n)data:\s*/g, '') // quita "data:" en cada línea
 
-                for (const line of lines) {
-                    const cleanLine = line.replace(/^data:\s*/, '').trim()
-                    if (!cleanLine) {
-                    if (!lastCharWasNewline) {
-                        accumulatedText += '\n\n'
-                        messages.value[botMessageIndex].text = accumulatedText
-                        lastCharWasNewline = true
-                    }
-                    continue
-                    }
+              // Si el texto anterior no termina en espacio/puntuación y el nuevo chunk no comienza con espacio o salto de línea, añade espacio
+              if (accumulatedText &&
+                  !/[ \n\r\t.,!?]/.test(accumulatedText.slice(-1)) &&
+                  !/^[ \n\r\t]/.test(chunk)) {
+                accumulatedText += ' '
+              }
 
-                    buffer += cleanLine
-
-                    // Check for sentence endings and natural breaks
-                    if (/[.!?]\s*$/.test(cleanLine)) {
-                    if (buffer.trim()) {
-                        accumulatedText += buffer + ' '
-                        messages.value[botMessageIndex].text = accumulatedText
-                        buffer = ''
-                        lastCharWasNewline = false
-                    }
-                    }
-
-                    // Handle explicit paragraph breaks
-                    if (cleanLine.includes('\n')) {
-                    accumulatedText += buffer + '\n\n'
-                    messages.value[botMessageIndex].text = accumulatedText
-                    buffer = ''
-                    lastCharWasNewline = true
-                    }
-                }
-                }
+              accumulatedText += chunk
+              messages.value[botMessageIndex].text = accumulatedText
+          }
       }
   }
   </script>
@@ -290,9 +226,22 @@
       color: #1a73e8;
   }
   
+  .message-content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .message-sender {
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 4px;
+    color: #8e8e8e;
+  }
+
   .message-bubble {
       flex: 1;
-      padding: 1rem 0;
+      padding:  0;
       color: #e0e0e0;
       line-height: 1.5;
       font-size: 1rem;
