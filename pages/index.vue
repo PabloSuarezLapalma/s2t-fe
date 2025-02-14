@@ -1,52 +1,31 @@
 <script setup lang="ts">
-import type { FormError, FormSubmitEvent } from "#ui/types";
-import { useRouter } from "vue-router";
+import { useAuth } from "../composables/useAuth"; // Ajusta la ruta si es necesario
 
-const router = useRouter();
-
-const state = reactive({
-  email: "",
-  password: "",
-});
-
-const validate = (state: any): FormError[] => {
-  const errors = [];
-  if (!state.email) errors.push({ path: "email", message: "Required" });
-  if (!state.password) errors.push({ path: "password", message: "Required" });
-  return errors;
-};
-
-async function onSubmit(event: FormSubmitEvent<any>) {
-  alert("Inicio de sesión exitoso.");
-  router.push("/home");
-}
+const { user, login, logout } = useAuth();
 </script>
 
 <template>
   <div class="flex items-center justify-center min-h-screen">
     <div class="w-96">
-      <NuxtRouteAnnouncer />
-      <UCard>
-        <UForm
-          :validate="validate"
-          :state="state"
-          class="space-y-4"
-          @submit="onSubmit"
+      <h1 class="text-2xl font-bold text-center">Login con Google</h1>
+      <div v-if="!user">
+        <button
+          @click="login"
+          class="w-full flex items-center justify-center py-2 px-4 bg-white border text-black border-gray-300 rounded mt-4 hover:bg-gray-100"
         >
-          <h1 class="text-2xl font-bold text-center">Login</h1>
-          <UFormGroup label="Email" name="email">
-            <UInput v-model="state.email" />
-          </UFormGroup>
-
-          <UFormGroup label="Password" name="password">
-            <UInput v-model="state.password" type="password" />
-          </UFormGroup>
-
-          <div class="flex justify-center">
-            <UButton type="submit" class="align-center"> Login </UButton>
-          </div>
-        </UForm>
-      </UCard>
+          <img src="/public/google.png" alt="Google Icon" class="w-6 h-6 mr-2" />
+          Iniciar sesión con Google
+        </button>
+      </div>
+      <div v-else class="text-center mt-4">
+        <p>Bienvenido, {{ user.displayName }}</p>
+        <button
+          @click="logout"
+          class="w-full py-2 px-4 bg-red-500 text-white rounded mt-4"
+        >
+          Cerrar sesión
+        </button>
+      </div>
     </div>
   </div>
 </template>
