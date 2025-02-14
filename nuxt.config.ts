@@ -4,4 +4,12 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   modules: ['@nuxt/ui'],
   plugins: ["~/plugins/firebase.ts"],
+  runtimeConfig: {
+    public: {
+      axios: {
+        baseURL: 'http://localhost:7000', // Backend API URL
+        credentials: true, // Include credentials in requests
+      }
+    }
+  },
 })

@@ -1,8 +1,11 @@
 <template>
-    <div class="layout">
+    <div v-if="isLoading" class="loading-overlay">
+        <div class="spinner"></div>
+    </div>
+    <div v-else class="layout">
       <aside class="sidebar">
         <div class="sidebar-header">
-          <span>Gemini 2.0 Flash Experimental</span>
+          <span>Gemini 2.0 Flash Experimental</span>          
         </div>
         <nav>
           <ul class="sidebar-nav">
@@ -19,6 +22,15 @@
       </aside>
   
       <div class="chat-container">
+        <!-- New model selector placed at the top -->
+        <div class="model-selector-container">
+          <label for="model-select">Selecciona Modelo:</label>
+          <select id="model-select" v-model="selectedModel">
+            <option value="gemini">Gemini Flash 2.0 Exp</option>
+            <option value="mistral">Mistral Large</option>
+          </select>
+        </div>
+        
         <main class="chat-messages">
           <div class="message-list">
             <TransitionGroup name="message">
@@ -28,14 +40,16 @@
                 <div class="message-content">
                   <div class="message-avatar" :class="message.type">
                     <template v-if="message.type === 'bot'">
-                      <img src="/public/gemini.png" alt="Gemini Icon" class="gemini-chat-icon" style="border-radius: 50%;" />
+                      <img :src="botIcon" alt="Bot Icon" class="gemini-chat-icon" style="border-radius: 50%;" />
                     </template>
                     <template v-else>
                       <i class="fas fa-user"></i>
                     </template>
                   </div>
                   <div class="message-content-wrapper">
-                    <div class="message-sender">{{ message.type === 'bot' ? 'Gemini' : 'You' }}</div>
+                    <div class="message-sender">
+                      {{ message.type === 'bot' ? (selectedModel==='gemini' ? 'Gemini' : 'Mistral') : (user?.displayName || 'User') }}
+                    </div>
                     <div class="message-bubble">{{ message.text }}</div>
                   </div>
                 </div>
@@ -61,16 +75,69 @@
           </div>
         </footer>
       </div>
+
+      <button @click="handleLogout" class="logout-button">
+        <i class="fas fa-sign-out-alt"></i>
+        Cerrar sesión
+      </button>
     </div>
   </template>
   
   <script setup>
-  import { ref } from 'vue'
+  import { ref, onMounted, computed, watch } from 'vue'
+  import { useAuth } from '~/composables/useAuth'
+  import { useRouter } from 'vue-router'
+
+  const { user, logout } = useAuth()
+  const router = useRouter()
+  const isLoading = ref(true)
 
   const messages = ref([
       { text: 'Hi, I\'m Gemini. How can I help you today?', type: 'bot' }
   ])
   const newMessage = ref('')
+  const selectedModel = ref('gemini')
+
+  // Updated computed property for dynamic bot icon
+  const botIcon = computed(() => {
+    return selectedModel.value === 'gemini' 
+      ? '/gemini.png' 
+      : '/mistral.png'
+  })
+
+  // Agregar esta función para actualizar el favicon
+  const updateFavicon = () => {
+    let favicon = document.querySelector("link[rel='icon']");
+    const newHref = selectedModel.value === 'gemini' 
+      ? '/icons/gemini.ico' 
+      : '/icons/mistral.ico';
+    if (favicon) {
+      favicon.href = newHref;
+    } else {
+      favicon = document.createElement('link');
+      favicon.rel = 'icon';
+      favicon.href = newHref;
+      document.head.appendChild(favicon);
+    }
+  }
+
+  // Reemplazar el watch existente
+  watch(selectedModel, (newValue) => {
+    updateFavicon();
+  })
+
+  // Updated favicon update in onMounted
+  onMounted(() => {
+    updateFavicon();
+    setTimeout(() => {
+        isLoading.value = false
+    }, 1000)
+  })
+
+  const handleLogout = async () => {
+      await logout()
+      router.push('/')
+  }
 
   const sendMessage = async () => {
       if (newMessage.value.trim()) {
@@ -81,7 +148,9 @@
           const botMessageIndex = messages.value.length
           messages.value.push({ text: '', type: 'bot' })
 
-          const response = await fetch('http://localhost:7000/prompt', {
+          const endpoint = selectedModel.value === 'gemini' ? 'http://localhost:7000/prompt' : 'http://localhost:7000/mistral/prompt'
+
+          const response = await fetch(endpoint, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ prompt: promptText })
@@ -370,5 +439,76 @@
       border-radius: 4px;
       padding: 0.2em 0.4em;
       font-family: monospace;
+  }
+
+  .loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #1e1e1e;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+
+  .spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid #333;
+    border-top: 5px solid #1a73e8;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  .logout-button {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 10px 20px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background-color 0.2s;
+  }
+
+  .logout-button:hover {
+    background: #c82333;
+  }
+
+  /* New styles for the model selector */
+  .model-selector-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 1rem 0;
+    background: #2b2b2b;
+    border-bottom: 1px solid #2a2a2a;
+  }
+  
+  .model-selector-container label {
+    font-weight: 500;
+    color: #e0e0e0;
+  }
+  
+  .model-selector-container select {
+    padding: 0.4rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid #4a4a4a;
+    background: #1e1e1e;
+    color: #e0e0e0;
   }
   </style>
