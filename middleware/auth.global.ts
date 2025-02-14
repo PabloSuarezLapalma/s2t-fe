@@ -2,7 +2,7 @@ import { defineNuxtRouteMiddleware, navigateTo, useState, watch } from '#imports
 
 export default defineNuxtRouteMiddleware(async (to, from) => {
   // Allow public access for the login page
-  if (to.path === '/' || to.path === '/index') return;
+  if (to.path === '/' || to.path === '/index' || to.path === '/register' || to.path === '/home') return;
   
   const user = useState("user");
   const authReady = useState("authReady", () => false);
