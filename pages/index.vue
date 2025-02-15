@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuth } from "../composables/useAuth"; // Ajusta la ruta si es necesario
+import { useAuth } from "~/composables/useAuth"; // Ajusta la ruta si es necesario
 
 const { user, login, logout, loginWithEmail } = useAuth();
 
