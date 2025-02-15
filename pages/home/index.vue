@@ -148,7 +148,7 @@
           const botMessageIndex = messages.value.length
           messages.value.push({ text: '', type: 'bot' })
 
-          const endpoint = selectedModel.value === 'gemini' ? 'http://localhost:7000/prompt' : 'http://localhost:7000/mistral/prompt'
+          const endpoint = selectedModel.value === 'gemini' ? 'http://localhost:7000/gemini/prompt' : 'http://localhost:7000/mistral/prompt'
 
           const response = await fetch(endpoint, {
               method: 'POST',
